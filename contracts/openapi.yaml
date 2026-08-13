@@ -1,0 +1,330 @@
+openapi: 3.0.3
+
+info:
+  title: Real-Time Fraud Detection Platform API
+  version: 1.0.0
+  description: REST API for transaction processing, fraud detection, risk decisions, cases and fraud rules.
+
+servers:
+  - url: https://api.fraud-platform.example.com
+
+tags:
+  - name: Transactions
+  - name: Risk
+  - name: Cases
+  - name: Rules
+  - name: Dashboard
+
+paths:
+
+  /api/v1/transactions:
+    post:
+      tags:
+        - Transactions
+      summary: Submit a transaction
+      operationId: createTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '202':
+          description: Transaction accepted for fraud analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          description: Invalid transaction
+        '401':
+          description: Unauthorized
+
+  /api/v1/transactions/{transactionId}/risk-score:
+    get:
+      tags:
+        - Risk
+      summary: Get transaction risk score
+      operationId: getRiskScore
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Risk decision returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskDecision'
+        '404':
+          description: Transaction not found
+
+  /api/v1/cases:
+    get:
+      tags:
+        - Cases
+      summary: Get fraud investigation cases
+      operationId: getCases
+      responses:
+        '200':
+          description: List of fraud cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FraudCase'
+
+  /api/v1/cases/{caseId}/decision:
+    put:
+      tags:
+        - Cases
+      summary: Update case investigation decision
+      operationId: updateCaseDecision
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseDecisionRequest'
+      responses:
+        '200':
+          description: Case decision updated
+        '404':
+          description: Case not found
+
+  /api/v1/rules:
+    get:
+      tags:
+        - Rules
+      summary: List fraud rules
+      operationId: getRules
+      responses:
+        '200':
+          description: Fraud rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FraudRule'
+
+    post:
+      tags:
+        - Rules
+      summary: Create a fraud rule
+      operationId: createRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FraudRuleRequest'
+      responses:
+        '201':
+          description: Fraud rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudRule'
+
+  /api/v1/dashboard/metrics:
+    get:
+      tags:
+        - Dashboard
+      summary: Get fraud detection dashboard metrics
+      operationId: getDashboardMetrics
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+
+components:
+
+  parameters:
+
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: TXN-10001
+
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: CASE-10001
+
+  schemas:
+
+    TransactionRequest:
+      type: object
+      required:
+        - transactionId
+        - customerId
+        - amount
+        - currency
+        - channel
+      properties:
+        transactionId:
+          type: string
+        customerId:
+          type: string
+        accountId:
+          type: string
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: INR
+        merchantId:
+          type: string
+        channel:
+          type: string
+          example: UPI
+        deviceId:
+          type: string
+        country:
+          type: string
+          example: IN
+        timestamp:
+          type: string
+          format: date-time
+
+    TransactionResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        status:
+          type: string
+          enum:
+            - ACCEPTED
+            - REJECTED
+        message:
+          type: string
+        traceId:
+          type: string
+
+    RiskDecision:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        decision:
+          type: string
+          enum:
+            - APPROVE
+            - DECLINE
+            - REVIEW
+        confidence:
+          type: number
+          format: double
+        reasons:
+          type: array
+          items:
+            type: string
+        modelVersion:
+          type: string
+
+    FraudCase:
+      type: object
+      properties:
+        caseId:
+          type: string
+        transactionId:
+          type: string
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+        status:
+          type: string
+          enum:
+            - OPEN
+            - IN_PROGRESS
+            - RESOLVED
+            - CLOSED
+        assignedAnalyst:
+          type: string
+        reason:
+          type: string
+
+    CaseDecisionRequest:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum:
+            - FRAUD_CONFIRMED
+            - FALSE_POSITIVE
+            - ESCALATED
+        notes:
+          type: string
+
+    FraudRule:
+      type: object
+      properties:
+        ruleId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        version:
+          type: integer
+        enabled:
+          type: boolean
+        priority:
+          type: integer
+
+    FraudRuleRequest:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+        enabled:
+          type: boolean
+
+    DashboardMetrics:
+      type: object
+      properties:
+        totalTransactions:
+          type: integer
+        approvedTransactions:
+          type: integer
+        declinedTransactions:
+          type: integer
+        reviewRequired:
+          type: integer
+        fraudCases:
+          type: integer
+        averageRiskScore:
+          type: number
+          format: double

@@ -1,0 +1,196 @@
+syntax = "proto3";
+
+package fraud.detection.v1;
+
+option java_multiple_files = true;
+option java_package = "com.frauddetection.contracts";
+option java_outer_classname = "FraudDetectionProto";
+
+import "google/protobuf/timestamp.proto";
+
+service TransactionService {
+  rpc CreateTransaction(CreateTransactionRequest)
+      returns (CreateTransactionResponse);
+
+  rpc GetTransaction(GetTransactionRequest)
+      returns (Transaction);
+}
+
+service RuleEngineService {
+  rpc Evaluate(EvaluateRequest)
+      returns (RuleEvaluationResponse);
+}
+
+service AnomalyDetectionService {
+  rpc DetectAnomaly(AnomalyDetectionRequest)
+      returns (AnomalyDetectionResponse);
+}
+
+service GraphAnalysisService {
+  rpc AnalyseGraph(GraphAnalysisRequest)
+      returns (GraphAnalysisResponse);
+}
+
+service RiskScoringService {
+  rpc CalculateRiskScore(RiskScoreRequest)
+      returns (RiskDecision);
+}
+
+service CustomerProfileService {
+  rpc GetProfile(GetProfileRequest)
+      returns (CustomerProfile);
+
+  rpc UpdateProfile(UpdateProfileRequest)
+      returns (CustomerProfile);
+}
+
+service CaseManagementService {
+  rpc CreateCase(CreateCaseRequest)
+      returns (FraudCase);
+
+  rpc GetCases(GetCasesRequest)
+      returns (GetCasesResponse);
+}
+
+message CreateTransactionRequest {
+  string transaction_id = 1;
+  string customer_id = 2;
+  string account_id = 3;
+  double amount = 4;
+  string currency = 5;
+  string merchant_id = 6;
+  string channel = 7;
+  string device_id = 8;
+  string country = 9;
+  google.protobuf.Timestamp timestamp = 10;
+}
+
+message CreateTransactionResponse {
+  string transaction_id = 1;
+  string status = 2;
+  string message = 3;
+  string trace_id = 4;
+}
+
+message GetTransactionRequest {
+  string transaction_id = 1;
+}
+
+message Transaction {
+  string transaction_id = 1;
+  string customer_id = 2;
+  string account_id = 3;
+  double amount = 4;
+  string currency = 5;
+  string merchant_id = 6;
+  string channel = 7;
+  string device_id = 8;
+  string country = 9;
+  google.protobuf.Timestamp timestamp = 10;
+  string status = 11;
+}
+
+message EvaluateRequest {
+  string transaction_id = 1;
+  double amount = 2;
+  string customer_id = 3;
+  string merchant_id = 4;
+  string channel = 5;
+}
+
+message RuleEvaluationResponse {
+  string transaction_id = 1;
+  string rule_id = 2;
+  int32 rule_version = 3;
+  bool triggered = 4;
+  int32 score = 5;
+  string reason = 6;
+}
+
+message AnomalyDetectionRequest {
+  string transaction_id = 1;
+  string customer_id = 2;
+  double amount = 3;
+  string device_id = 4;
+  string merchant_id = 5;
+}
+
+message AnomalyDetectionResponse {
+  string transaction_id = 1;
+  double anomaly_score = 2;
+  double threshold = 3;
+  string model_id = 4;
+  string model_version = 5;
+  string reason = 6;
+}
+
+message GraphAnalysisRequest {
+  string transaction_id = 1;
+  string customer_id = 2;
+  string account_id = 3;
+  string device_id = 4;
+}
+
+message GraphAnalysisResponse {
+  string transaction_id = 1;
+  int32 risk_score = 2;
+  int32 related_entities = 3;
+  int32 suspicious_connections = 4;
+  bool fraud_ring_detected = 5;
+}
+
+message RiskScoreRequest {
+  string transaction_id = 1;
+  int32 rule_score = 2;
+  double anomaly_score = 3;
+  int32 graph_score = 4;
+}
+
+message RiskDecision {
+  string transaction_id = 1;
+  int32 risk_score = 2;
+  string decision = 3;
+  double confidence = 4;
+  repeated string reasons = 5;
+}
+
+message GetProfileRequest {
+  string customer_id = 1;
+}
+
+message UpdateProfileRequest {
+  string customer_id = 1;
+  string risk_category = 2;
+  string device_id = 3;
+}
+
+message CustomerProfile {
+  string customer_id = 1;
+  string account_id = 2;
+  string risk_category = 3;
+  repeated string device_ids = 4;
+}
+
+message CreateCaseRequest {
+  string transaction_id = 1;
+  string priority = 2;
+  string reason = 3;
+}
+
+message FraudCase {
+  string case_id = 1;
+  string transaction_id = 2;
+  string priority = 3;
+  string status = 4;
+  string assigned_analyst = 5;
+  string reason = 6;
+}
+
+message GetCasesRequest {
+  string status = 1;
+  string assigned_analyst = 2;
+}
+
+message GetCasesResponse {
+  repeated FraudCase cases = 1;
+}
